@@ -1,0 +1,64 @@
+    1  git init
+    2  git init
+    3  git add .
+    4  git push https://github.com/firojazure5256/NewDep.git
+    5  git config --global user.email "firojazure5256@gmail.com"
+    6  git config --global user.password "Firojdosapati@2007"
+    7  git push -u https://github.com/firojazure5256/NewDep.git
+    8  git push -set-upstream  https://github.com/firojazure5256/NewDep.git
+    9  git push -set-u https://github.com/firojazure5256/NewDep.git
+   10  git push -set-upstream  https://github.com/firojazure5256/NewDep.git
+   11  clear
+   12  git push -u -f  https://github.com/firojazure5256/NewDep.git
+   13  git push https://github.com/firojazure5256/NewDep.git
+   14  git push -u -f  https://github.com/firojazure5256/NewDep.git  master
+   15  git checkout -b crea
+   16  git push -u https://github.com/firojazure5256/NewDep.git
+   17  git push -u https://github.com/firojazure5256/NewDep.git crea
+   18  git push 
+   19  git remote add https://github.com/firojazure5256/NewDep.git
+   20  git remote add origin https://github.com/firojazure5256/NewDep.git
+   21  git push -u https://github.com/firojazure5256/NewDep.git crea
+   22  git push -u origin main
+   23  git push -u origin https://github.com/firojazure5256/NewDep.git
+   24  git push -u origin https://github.com/firojazure5256/NewDep.git
+   25  git push -u  https://github.com/firojazure5256/NewDep.git
+   26  git add .
+   27  git commit -m "charan"
+   28  clear
+   29  git remote add origin https://github.com/firojazure5256/NewDep.git
+   30  clear
+   31  git checkout -b main
+   32  git remote add origin https://github.com/firojazure5256/NewDep.git
+   33   git remote -v
+   34  git push origin main
+   35  git push origin main
+   36  git push -u origin
+   37  [200~git push --set-upstream origin main
+   38  git push --set-upstream origin main
+   39  git pull git push --set-upstream origin main
+   40  git pull https://github.com/firojazure5256/NewDep.git
+   41  git push
+   42  git push -u https://github.com/firojazure5256/NewDep.git
+   43  clear
+   44  git status
+   45  git init
+   46  git add . && git commit -m "charan"
+   47  git remote add origin https://github.com/firojazure5256/NewDep.git
+   48  git push -u origin main
+   49  clear
+   50  exit
+   51  git init
+   52  clear
+   53  git add . && git commit -m "My first commit"
+   54  git init
+   55  git add . && git commit -m " charan's first commit"
+   56  clear
+   57  git branch -m main 
+   58  clear
+   59  git remote add origin https://github.com/charantejterraform/allinone.git
+   60  git push -u origin main
+   61  git push -u origin main
+   62  clear
+   63  history
+   64  history >charan.txt
