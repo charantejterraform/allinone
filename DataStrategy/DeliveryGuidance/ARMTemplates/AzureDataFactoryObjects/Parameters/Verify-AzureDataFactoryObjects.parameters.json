@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "dsipadf01v"
+        },
+        "LS_SQL_MetadataControl_connectionString": {
+            "value": "Server=dsipasqldb01v.database.windows.net,1433;Initial Catalog=MetadataControl;Persist Security Info=False;User ID=sqladmin"
+        },
+        "LS_AKV_properties_typeProperties_baseUrl": {
+            "value": "https://dsipakv01v.vault.azure.net/"
+        },
+        "LS_Adls_Example_properties_typeProperties_url": {
+            "value": "https://dsipstorageaccount01v.dfs.core.windows.net/"
+        },
+        "PL_EventGridTopicUri": {
+            "value": "https://dsipeventgridtopicv.westeurope-1.eventgrid.azure.net/api/events"
+        },
+        "LS_Blob_DataIngestionStaging_properties_typeProperties_serviceEndpoint": {
+            "value": "https://dsipingestionstagingv.blob.core.windows.net"
+        }
+    }
+}

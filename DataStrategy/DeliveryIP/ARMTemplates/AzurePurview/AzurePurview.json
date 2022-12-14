@@ -1,0 +1,43 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "purviewName": {
+            "type": "string",
+            "metadata": {
+                "description": "Required. The name of the Azure Purview account to create."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Optional. Location for all resources"
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('purviewName')]",
+            "type": "Microsoft.Purview/accounts",
+            "apiVersion": "2021-07-01",
+            "location": "[parameters('location')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties":{
+                "networkAcls": {
+                    "defaultAction": "Allow"
+                }
+            },
+            "dependsOn": [],
+            "sku": {
+                "name": "Standard",
+                "capacity": "1"
+            },
+            "tags": {}
+        }
+    ],
+    "outputs": {}
+}

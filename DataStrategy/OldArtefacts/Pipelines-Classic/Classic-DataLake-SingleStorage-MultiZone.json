@@ -1,0 +1,263 @@
+{
+    "source": 2,
+    "revision": 2,
+    "description": null,
+    "createdOn": "2021-06-26T08:53:48.373Z",
+    "modifiedOn": "2021-06-26T08:55:36.000Z",
+    "isDeleted": false,
+    "variables": {
+        "Location": {
+            "value": "UKSouth"
+        },
+        "ResourceGroup": {
+            "value": "ScratchPad"
+        },
+        "SubscriptionId": {
+            "value": "7825954e-69b2-4d79-a5de-3a9eb0d73d96"
+        }
+    },
+    "variableGroups": [],
+    "environments": [
+        {
+            "id": 1,
+            "name": "Dev",
+            "rank": 1,
+            "variables": {},
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 1
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 2
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 3
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "vs2017-win2016"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 8445,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Agent job",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "94a74903-f93f-4075-884f-dc11f34058b4",
+                            "version": "3.*",
+                            "name": "Deploy Data Lake Single Storage Multi Zone",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "deploymentScope": "Resource Group",
+                                "ConnectedServiceName": "c65f4cc2-c500-491e-b3fe-78ee4e33fd25",
+                                "subscriptionName": "7825954e-69b2-4d79-a5de-3a9eb0d73d96",
+                                "action": "Create Or Update Resource Group",
+                                "resourceGroupName": "$(ResourceGroup)",
+                                "location": "$(Location)",
+                                "templateLocation": "Linked artifact",
+                                "csmFileLink": "",
+                                "csmParametersFileLink": "",
+                                "csmFile": "$(System.DefaultWorkingDirectory)/Data Strategy Reference Implementation/ARMTemplates/AzureStorage/AzureStorage.json",
+                                "csmParametersFile": "$(System.DefaultWorkingDirectory)/Data Strategy Reference Implementation/ARMTemplates/AzureStorage/Parameters/Dev-AzureStorage.parameters.json",
+                                "overrideParameters": "",
+                                "deploymentMode": "Incremental",
+                                "deploymentName": "",
+                                "deploymentOutputs": "",
+                                "addSpnToEnvironment": "false"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": false,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [
+                {
+                    "name": "ReleaseStarted",
+                    "conditionType": 1,
+                    "value": ""
+                }
+            ],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "currentRelease": {
+                "id": 2,
+                "url": "https://servicescode.vsrm.visualstudio.com/56f7a678-a8cb-473a-a6d1-cc4cd9786431/_apis/Release/releases/2",
+                "_links": {}
+            },
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "unmapped"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": [],
+            "badgeUrl": "https://servicescode.vsrm.visualstudio.com/_apis/public/Release/badge/56f7a678-a8cb-473a-a6d1-cc4cd9786431/1/1"
+        }
+    ],
+    "artifacts": [
+        {
+            "sourceId": "56f7a678-a8cb-473a-a6d1-cc4cd9786431:80d505ac-b9ac-4f9e-bf83-3b35f6e2b1a3",
+            "type": "Git",
+            "alias": "Data Strategy Reference Implementation",
+            "definitionReference": {
+                "branches": {
+                    "id": "feature/chris_84708",
+                    "name": "feature/chris_84708"
+                },
+                "checkoutNestedSubmodules": {
+                    "id": "True",
+                    "name": "Any nested submodules within"
+                },
+                "checkoutSubmodules": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionSpecific": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionType": {
+                    "id": "latestFromBranchType",
+                    "name": "Latest from the default branch"
+                },
+                "definition": {
+                    "id": "80d505ac-b9ac-4f9e-bf83-3b35f6e2b1a3",
+                    "name": "Data Strategy Reference Implementation"
+                },
+                "fetchDepth": {
+                    "id": "",
+                    "name": ""
+                },
+                "gitLfsSupport": {
+                    "id": "",
+                    "name": ""
+                },
+                "project": {
+                    "id": "56f7a678-a8cb-473a-a6d1-cc4cd9786431",
+                    "name": "Data Strategy Reference Implementation"
+                }
+            },
+            "isPrimary": true,
+            "isRetained": false
+        }
+    ],
+    "triggers": [],
+    "releaseNameFormat": "Release-$(rev:r)",
+    "tags": [],
+    "properties": {
+        "DefinitionCreationSource": {
+            "$type": "System.String",
+            "$value": "ReleaseNew"
+        },
+        "IntegrateBoardsWorkItems": {
+            "$type": "System.String",
+            "$value": "False"
+        },
+        "IntegrateJiraWorkItems": {
+            "$type": "System.String",
+            "$value": "false"
+        }
+    },
+    "id": 1,
+    "name": "Classic-DataLake-SingleStorage-MultiZone",
+    "path": "\\",
+    "projectReference": null,
+    "url": "https://servicescode.vsrm.visualstudio.com/56f7a678-a8cb-473a-a6d1-cc4cd9786431/_apis/Release/definitions/1",
+    "_links": {
+        "self": {
+            "href": "https://servicescode.vsrm.visualstudio.com/56f7a678-a8cb-473a-a6d1-cc4cd9786431/_apis/Release/definitions/1"
+        },
+        "web": {
+            "href": "https://servicescode.visualstudio.com/56f7a678-a8cb-473a-a6d1-cc4cd9786431/_release?definitionId=1"
+        }
+    }
+}

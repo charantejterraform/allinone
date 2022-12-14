@@ -1,0 +1,5 @@
+variables:
+  serviceConnection: 'ES-Data Strategy-DEV-ServiceConnection'
+  VerificationEnvironment: 'Verify'
+  ArtifactFeedPath: 'Data Strategy Reference Implementation/DataStrategy-DeliveryIp'
+  

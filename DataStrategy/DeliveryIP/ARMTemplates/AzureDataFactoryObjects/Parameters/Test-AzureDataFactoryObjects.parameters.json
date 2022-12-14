@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "<test adf name>"
+        },
+        "LS_SQL_MetadataControl_connectionString": {
+            "value": "Server=<your test sql server>.database.windows.net,1433;Initial Catalog=MetadataControl;Persist Security Info=False;User ID=sqladmin"
+        },
+        "LS_AKV_properties_typeProperties_baseUrl": {
+            "value": "https://<YourKeyVaultName>.vault.azure.net/"
+        },
+        "LS_Adls_Example_properties_typeProperties_url": {
+            "value": "https://<YourDataLakeName>.dfs.core.windows.net/"
+        },
+        "LS_Blob_DataIngestionStaging_properties_typeProperties_serviceEndpoint": {
+            "value": "https://<YourStagingStorage>.blob.core.windows.net"
+        },
+        "PL_EventGridTopicUri": {
+            "value": "https://<YourEventGridTopicName>.uksouth-1.eventgrid.azure.net/api/events"            
+        }
+    }
+}

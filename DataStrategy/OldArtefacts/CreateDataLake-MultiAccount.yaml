@@ -1,0 +1,92 @@
+name: Pipeline-$(Build.DefinitionName)-$(Date:yyyyMMdd)$(Rev:.r)
+
+pr: none
+
+trigger: none
+    
+variables:
+- group: 'EnvironmentVariables'
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+- stage: PublishArmTemplates
+  displayName: 'Publish Arm Templates'
+  jobs:
+    - job: Build
+      steps:
+        - publish: $(System.DefaultWorkingDirectory)/ARMTemplates
+          artifact: ArmTemplates
+
+- stage: 'Dev'
+  displayName: 'Dev Release'
+  jobs:
+  - deployment: Release_Infrastructure
+    displayName: Release Infrastructure
+    environment: '$(Dev-Environment)'
+    strategy:
+      runOnce:
+        preDeploy:
+          steps:
+            - download: current
+              artifact: ArmTemplates
+        deploy:
+          steps:
+
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: 'Create Data Lake Raw'
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: "$(Ado-ServiceConnectionName)"
+              subscriptionId: "$(Dev-SubscriptionId)"
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: '$(Dev-ResourceGroupName)'
+              location: '$(Location)'
+              templateLocation: 'Linked artifact'
+              csmFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/AzureStorage.json'
+              csmParametersFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/Parameters/Dev-AzureStorage-raw.parameters.json'
+              deploymentMode: 'Incremental'
+
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: 'Create Data Lake Working'
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: "$(Ado-ServiceConnectionName)"
+              subscriptionId: "$(Dev-SubscriptionId)"
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: '$(Dev-ResourceGroupName)'
+              location: '$(Location)'
+              templateLocation: 'Linked artifact'
+              csmFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/AzureStorage.json'
+              csmParametersFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/Parameters/Dev-AzureStorage-working.parameters.json'
+              deploymentMode: 'Incremental'
+          
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: 'Create Data Lake Curated'
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: "$(Ado-ServiceConnectionName)"
+              subscriptionId: "$(Dev-SubscriptionId)"
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: '$(Dev-ResourceGroupName)'
+              location: '$(Location)'
+              templateLocation: 'Linked artifact'
+              csmFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/AzureStorage.json'
+              csmParametersFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/Parameters/Dev-AzureStorage-curated.parameters.json'
+              deploymentMode: 'Incremental'
+         
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: 'Create Data Lake Sandbox'
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: "$(Ado-ServiceConnectionName)"
+              subscriptionId: "$(Dev-SubscriptionId)"
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: '$(Dev-ResourceGroupName)'
+              location: '$(Location)'
+              templateLocation: 'Linked artifact'
+              csmFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/AzureStorage.json'
+              csmParametersFile: '$(Agent.BuildDirectory)/ArmTemplates/AzureStorage/Parameters/Dev-AzureStorage-sandbox.parameters.json'
+              deploymentMode: 'Incremental'
+         

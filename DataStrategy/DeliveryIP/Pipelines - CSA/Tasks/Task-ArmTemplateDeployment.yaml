@@ -1,0 +1,25 @@
+parameters:
+  ServiceConnection: string
+  SubscriptionId: string
+  ResourceGroupName: string
+  Location: string
+  TemplateFilePath: string
+  TemplateParamFilePath: string
+  ServiceReleased: string
+
+steps:
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: "Create ${{ parameters.ServiceReleased}}"
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: ${{ parameters.ServiceConnection }}
+    subscriptionId: ${{ parameters.SubscriptionId }}
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: ${{ parameters.ResourceGroupName }}
+    location: ${{ parameters.Location }}
+    templateLocation: 'Linked artifact'
+    csmFile: ${{ parameters.TemplateFilePath }}
+    csmParametersFile: ${{ parameters.TemplateParamFilePath }}
+    deploymentMode: 'Incremental'
+

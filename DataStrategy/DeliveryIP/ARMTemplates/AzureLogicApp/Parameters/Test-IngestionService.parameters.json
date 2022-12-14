@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"LogicAppName": {
+			"value": "<your test environment logic app name>"
+		},
+		"connections_sql_name": {
+           "value": "<your test environment sql api name>"
+        },
+        "SqlServerName": {
+            "value": "<your test environment SQL Server Name>.database.windows.net"
+        },
+        "DatabaseName": {
+            "value": "MetadataControl"
+        },
+        "DataFactoryName": {
+            "value": "<your test data factory name>"
+        },
+        "PipelineReferenceName": {
+            "value": "PL_IngestFromStaging_lp8_TopLevel"
+        },
+        "ResourceGroupName": {
+            "value": "<your test resource group name>"
+        },
+        "SubscriptionId": {
+            "value": "<your test subscription id>"
+        }
+	}
+}

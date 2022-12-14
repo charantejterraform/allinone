@@ -1,0 +1,74 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"storageAccountName": {
+			"value": "<your storage account name>"
+		},
+		"location": {
+			"value": "uksouth"
+		},
+		"storageAccountKind": {
+			"value": "StorageV2"
+		},
+		"storageAccountSku": {
+			"value": "Standard_ZRS"
+		},
+		"storageAccountAccessTier": {
+			"value": "Hot"
+		},
+		"vNetId": {
+			"value": ""
+		},
+		"privateEndpoints": {
+			"value": []
+		},
+		"networkAcls": {
+			"value": {
+				"bypass": "AzureServices",
+				"defaultAction": "Allow",
+				"virtualNetworkRules": "",
+				"ipRules": ""
+			}
+		},
+		"blobContainers": {
+			"value": [
+				{
+					"name": "sandbox",
+					"publicAccess": "None",
+					"roleAssignments": []
+				}
+			]
+		},
+		"deleteRetentionPolicy": {
+			"value": false
+		},
+		"deleteRetentionPolicyDays": {
+			"value": 7
+		},
+		"automaticSnapshotPolicyEnabled": {
+			"value": false
+		},
+		"allowBlobPublicAccess": {
+			"value": true
+		},
+		"enableArchiveAndDelete": {
+			"value": false
+		},
+		"enableHierarchicalNamespace": {
+			"value": true
+		},
+		"moveToArchiveAfter": {
+			"value": 30
+		},
+		"deleteBlobsAfter": {
+			"value": 1096
+		},
+		"lockForDeletion": {
+			"value": false
+		},
+		"cuaId": {
+			"value": ""
+		}
+	}
+}

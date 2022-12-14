@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"WorkspaceName": {
+			"value": "<your test Workspace name>"
+		},
+		"defaultDataLakeStorageAccountName": {
+			"value": "<your test storage account name>"
+		},
+		"defaultDataLakeStorageFilesystemName": {
+			"value": "<your test storage Filesystem name>"
+		},
+		"sqlAdministratorLogin": {
+			"value": "<your test sqlAdministrator Login>"
+		},
+		"sqlAdministratorLoginPassword": {
+            "reference": {
+				"keyVault": {
+					"id": "/subscriptions/xxxxxxxxxxxxxxx/resourceGroups/xxxxxxxxxxxxxxx/providers/Microsoft.KeyVault/vaults/xxxxxxxxxxxxxxx"
+				},
+				"secretName": "AzureSynapse-Password"
+			}
+		},
+		"setWorkspaceIdentityRbacOnStorageAccount": {
+			"value": "<bool>"
+		},
+		"synapseSqlAdminGroupName": {
+			"value": "<your	test synapse SqlAdmin Group Name>"
+		},
+		"synapseSqlAdminGroupObjectID": {
+			"value": "<your	test synapse SqlAdmin Group Object ID"
+		},
+		"grantWorkspaceIdentityControlForSql": {
+			"value": "<Enabled or Disabled>"
+		}
+	}
+}

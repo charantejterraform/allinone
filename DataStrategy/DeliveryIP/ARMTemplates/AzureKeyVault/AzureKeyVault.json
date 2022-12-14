@@ -1,0 +1,273 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Specifies the location for all the resources."
+      }
+    },
+    "enablePrivateEndpoint": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether the key vault should be connected to a private endpoint."
+      }
+    },
+    "enablePrivateEndpointDNSZone": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether the key vault should be connected to a private endpoint."
+      }
+    },
+    "VnetName": {
+      "type": "string",
+      "defaultValue": "virtualNetworkName",
+      "metadata": {
+        "description": "Specifies the name of the virtual network that the keyvault is joined to if enablePrivateEndpoint is true."
+      }
+    },
+    "vNetResourceGroup": {
+      "type": "string",
+      "defaultValue": "virtualNetworkResourceGroupName",
+      "metadata": {
+        "description": "Specifies the resource group name in which the virtual network resides."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "subnetName",
+      "metadata": {
+        "description": "Specifies the name of the subnet hosting the virtual machine."
+      }
+    },
+    "KeyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the key vault."
+      }
+    },
+    "enabledForDeployment": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault."
+      }
+    },
+    "enabledForDiskEncryption": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys."
+      }
+    },
+    "enabledForTemplateDeployment": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether Azure Resource Manager is permitted to retrieve secrets from the key vault."
+      }
+    },
+    "enableSoftDelete": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether the 'soft delete' functionality is enabled for this key vault. If it's not set to any value(true or false) when creating new key vault, it will be set to true by default. Once set to true, it cannot be reverted to false."
+      }
+    },
+    "softDeleteRetentionInDays": {
+      "type": "int",
+      "defaultValue": 90,
+      "metadata": {
+        "description": "Specifies the softDelete data retention days. It accepts >=7 and <=90."
+      }
+    },
+    "enableRbacAuthorization": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Controls how data actions are authorized. When true, the key vault will use Role Based Access Control (RBAC) for authorization of data actions, and the access policies specified in vault properties will be ignored (warning: this is a preview feature). When false, the key vault will use the access policies specified in vault properties, and any policy stored on Azure Resource Manager will be ignored. If null or not specified, the vault is created with the default value of false. Note that management actions are always authorized with RBAC."
+      }
+    },
+    "TenantId": {
+      "type": "string",
+      "defaultValue": "[subscription().tenantId]",
+      "metadata": {
+        "description": "Specifies the Azure Active Directory tenant ID that should be used for authenticating requests to the key vault. Get it by using Get-AzSubscription cmdlet."
+      }
+    },
+    "SkuName": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "Specifies whether the key vault is a standard vault or a premium vault."
+      }
+    },
+    "DevOpsObjectId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Specifies the object id of the DevOps service connection. DevOps will have the ability to get and list secrets."
+      }
+    },
+    "keyVaultPrivateDnsZoneName": {
+      "type": "string",
+      "defaultValue": "privatelink.vaultcore.azure.net",
+      "metadata": {
+        "description": "Specifies the name of the private DNS zone for key vault."
+      }
+    },
+    "keyVaultPrivateDnsZoneSubscriptionId": {
+      "type": "string",
+      "defaultValue": "00000000-0000-0000-0000-000000000000",
+      "metadata": {
+        "description": "Specifies the subscription Id where private DNS zone for key vault lives."
+      }
+    },
+    "keyVaultPrivateDnsZoneResourceGroup": {
+      "type": "string",
+      "defaultValue": "keyVaultPrivateDnsZoneResourceGroup",
+      "metadata": {
+        "description": "Specifies the resource group where private DNS zone for key vault lives."
+      }
+    }
+  },
+  "variables": {
+    "subnetId": "[resourceId(parameters('vNetResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('VnetName'), parameters('subnetName'))]",
+    "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+    "keyVaultPublicDNSZoneForwarder": ".vaultcore.azure.net",
+    "keyVaultPrivateDnsZoneId": "[resourceId(parameters('keyVaultPrivateDnsZoneSubscriptionId'), parameters('keyVaultPrivateDnsZoneResourceGroup'), 'Microsoft.Network/privateDnsZones', parameters('keyVaultPrivateDnsZoneName'))]",
+    "keyVaultPrivateEndpointName": "[concat(parameters('keyVaultName'), '-pep')]",
+    "keyVaultPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('keyVaultPrivateEndpointName'))]",
+    "keyVaultPrivateEndpointGroupName": "vault",
+    "keyVaultPrivateDnsZoneGroupName": "[concat(variables('keyVaultPrivateEndpointName'),'/', variables('keyVaultPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-09-01",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "tenantId": "[parameters('tenantId')]",
+        "sku": {
+          "name": "[parameters('skuName')]",
+          "family": "A"
+        },
+        "enabledForDeployment": "[parameters('enabledForDeployment')]",
+        "enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+        "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+        "enableSoftDelete": "[parameters('enableSoftDelete')]",
+        "softDeleteRetentionInDays": "[parameters('softDeleteRetentionInDays')]",
+        "enableRbacAuthorization": "[parameters('enableRbacAuthorization')]",
+        "accessPolicies": [
+          {
+            "tenantId": "[parameters('TenantId')]",
+            "objectId": "[parameters('DevOpsObjectId')]",
+            "permissions": {
+              "secrets": [ "get", "list", "set" ]
+            }
+          }
+        ],
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "[if(parameters('enablePrivateEndpoint'), 'Deny', 'Allow')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2020-04-01",
+      "name": "[variables('keyVaultPrivateEndpointName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('keyVaultId')]"
+      ],
+      "condition": "[parameters('enablePrivateEndpoint')]",
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('keyVaultPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('keyVaultId')]",
+              "groupIds": [
+                "[variables('keyVaultPrivateEndpointGroupName')]"
+              ]
+            }
+          }
+        ],
+        "subnet": {
+          "id": "[variables('subnetId')]"
+        },
+        "customDnsConfigs": [
+          {
+            "fqdn": "[concat(parameters('keyVaultName'), variables('keyVaultPublicDNSZoneForwarder'))]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('keyVaultPrivateDnsZoneGroupName')]",
+      "condition": "[parameters('enablePrivateEndpointDNSZone')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('keyVaultId')]",
+        "[variables('keyVaultPrivateEndpointId')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[variables('keyVaultPrivateDnsZoneId')]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "keyVaultPrivateEndpoint": {
+      "condition": "[parameters('enablePrivateEndpoint')]",
+      "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('keyVaultPrivateEndpointName')), '2020-04-01', 'Full')]",
+      "type": "object"
+    }
+  }
+}

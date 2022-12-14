@@ -1,0 +1,124 @@
+parameters:
+  ServiceConnection: string
+  Environment: string
+
+stages:  
+- stage: '${{ parameters.Environment }}Infrastructure'
+  displayName: '${{ parameters.Environment }} Infrastructure Release'
+  variables:
+  - template: ..\Variables\${{ parameters.Environment }}-Variables.yaml
+  jobs:
+  - deployment: ReleaseInfrastructure
+    displayName: Release Infrastructure
+    environment: ${{ parameters.Environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          # Deploy Azure Key Vault
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ Variables.SubscriptionId }}
+              ResourceGroupName: ${{ Variables.ResourceGroupName }}
+              Location: ${{ Variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureKeyVaultTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureKeyVaultTemplateParameterPath }}"
+              ServiceReleased: "Azure Key Vault"
+
+           # Create Key Vault Secret - AzureSQL
+          - template: ..\Tasks\Task-WriteKeyVaultSecret.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SecretName: ${{ variables.KeyVaultSecretNameSql }}
+              SecretValue: ${{ variables.KeyVaultSecretValueSql }}
+              KeyVaultName: ${{ variables.KeyVaultName }}  
+
+           # Create Key Vault Secret - AzureSynapse
+          - template: ..\Tasks\Task-WriteKeyVaultSecret.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SecretName: ${{ variables.KeyVaultSecretNameSynapse }}
+              SecretValue: ${{ variables.KeyVaultSecretValueSynapse }}
+              KeyVaultName: ${{ variables.KeyVaultName }}  
+
+          # Deploy Azure Data Lake
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ Variables.SubscriptionId }}
+              ResourceGroupName: ${{ variables.ResourceGroupName }}
+              Location: ${{ Variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureStorageTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureStorageTemplateParameterPath }}"
+              ServiceReleased: "Azure Data Lake"
+
+          # Deploy Event Grid Topic
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ Variables.SubscriptionId }}
+              ResourceGroupName: ${{ variables.ResourceGroupName }}
+              Location: ${{ Variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureEventGridTopicTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureEventGridTopicTemplateParameterPath }}"
+              ServiceReleased: "Azure Event Grid Topic"
+
+          # Deploy Azure Data Factory
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ Variables.SubscriptionId }}
+              ResourceGroupName: ${{ variables.ResourceGroupName }}
+              Location: ${{ Variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureDataFactoryTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureDataFactoryTemplateParameterPath }}"
+              ServiceReleased: "Azure Data Factory"
+
+          # Deploy Azure Sql Db and blob storage (for audits)   
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ Variables.SubscriptionId }}
+              ResourceGroupName: ${{ variables.ResourceGroupName }}
+              Location: ${{ Variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureSqlDbTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureSqlDbTemplateParameterPath }}"
+              ServiceReleased: "Azure Sql Db"
+
+          # Deploy Azure Purview if stage variable is enabled    
+          - ${{ if eq(Variables.DeployPurview, true) }}:
+            - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+              parameters:
+                ServiceConnection: ${{ parameters.ServiceConnection }}
+                SubscriptionId: ${{ Variables.SubscriptionId }}
+                ResourceGroupName: ${{ variables.ResourceGroupName }}
+                Location: ${{ Variables.Location }}
+                TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzurePurviewTemplatePath }}"
+                TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzurePurviewTemplateParameterPath }}"
+                ServiceReleased: "Azure Purview"
+
+          # Deploy Azure Synapse   
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ Variables.SubscriptionId }}
+              ResourceGroupName: ${{ variables.ResourceGroupName }}
+              Location: ${{ Variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureSynapseTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureSynapseTemplateParameterPath }}"
+              ServiceReleased: "Azure Synapse"
+
+          # Deploy Azure Storage for Handshake service   
+          - ${{ if eq(parameters.FeatureFlag_DeployHandShakeService, true) }}:
+            - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+              parameters:
+                ServiceConnection: ${{ parameters.ServiceConnection }}
+                SubscriptionId: ${{ Variables.SubscriptionId }}
+                ResourceGroupName: ${{ variables.ResourceGroupName }}
+                Location: ${{ Variables.Location }}
+                TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureStorageTemplatePath }}"
+                TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureStorageHandshakeTemplateParameterPath }}"
+                ServiceReleased: "Azure Storage - Handshake"

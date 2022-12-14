@@ -1,0 +1,38 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"WorkspaceName": {
+			"value": "dsipsynapse"
+		},
+		"defaultDataLakeStorageAccountName": {
+			"value": "dsipstorageaccount01"
+		},
+		"defaultDataLakeStorageFilesystemName": {
+			"value": "curated"
+		},
+		"sqlAdministratorLogin": {
+			"value": "synapseadmin"
+		},
+		"sqlAdministratorLoginPassword": {
+            "reference": {
+				"keyVault": {
+					"id": "/subscriptions/c6824e16-9a58-4d53-ba3a-5960e0c066f2/resourceGroups/DSIP-Demo1/providers/Microsoft.KeyVault/vaults/dsipakv01"
+				},
+				"secretName": "AzureSynapse-Password"
+			}
+		},
+		"setWorkspaceIdentityRbacOnStorageAccount": {
+			"value": false
+		},
+		"synapseSqlAdminGroupName": {
+			"value": ""
+		},
+		"synapseSqlAdminGroupObjectID": {
+			"value": ""
+		},
+		"grantWorkspaceIdentityControlForSql": {
+			"value": "Disabled"
+		}
+    }
+}

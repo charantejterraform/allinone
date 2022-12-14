@@ -1,0 +1,29 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"serverName": {
+			"value": "dsipasqldb01v"
+		},
+		"sqlDbName": {
+			"value": "MetadataControl"
+		},
+		"location": {
+			"value": "westeurope"
+		},
+		"administratorLogin": {
+			"value": "sqladmin"
+		},
+		"administratorLoginPassword": {
+			"reference": {
+				"keyVault": {
+					"id": "/subscriptions/c6824e16-9a58-4d53-ba3a-5960e0c066f2/resourceGroups/DSIP-CodeVerification/providers/Microsoft.KeyVault/vaults/dsipakv01v"
+				},
+				"secretName": "AzureSqlDb-Password"
+			}
+		},
+		"storageAccountName": {
+			"value": "dsipauditaccount01v"
+		}
+	}
+}

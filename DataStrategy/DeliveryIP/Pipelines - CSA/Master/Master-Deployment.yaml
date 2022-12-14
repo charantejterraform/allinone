@@ -1,0 +1,46 @@
+parameters:
+  - name: FeatureFlag_DeployHandShakeService
+    type: boolean
+    default: false
+
+name: Pipeline-$(Build.DefinitionName)-$(Date:yyyyMMdd)$(Rev:.r)
+
+pr: none
+
+trigger: none
+    
+variables:
+- template: ..\Variables\Global-Variables.yaml
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+
+  # DEV STAGE - deploy infrastructure stage
+- template: ..\Stages\Stage-Infrastructure.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    Environment: ${{ variables.DevEnvironment }}
+
+  # DEV STAGE - deploy services stage
+- template: ..\Stages\Stage-Services.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    DependsOn: '${{ variables.DevEnvironment }}Infrastructure'
+    Environment: ${{ variables.DevEnvironment }}
+    FeatureFlag_DeployHandShakeService: ${{ parameters.FeatureFlag_DeployHandShakeService }}
+    
+  # TEST STAGE - deploy infrastructure stage
+- template: ..\Stages\Stage-Infrastructure.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    Environment: ${{ variables.TestEnvironment }}
+
+  # TEST STAGE - deploy services stage
+- template: ..\Stages\Stage-Services.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    DependsOn: '${{ variables.TestEnvironment }}Infrastructure'
+    Environment: ${{ variables.TestEnvironment }}
+    FeatureFlag_DeployHandShakeService: ${{ parameters.FeatureFlag_DeployHandShakeService }}

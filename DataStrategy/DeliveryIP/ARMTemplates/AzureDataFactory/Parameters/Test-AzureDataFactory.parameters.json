@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataFactoryName": {
+            "value": "<your test data factory name>"
+        },
+        "gitConfigureLater": {
+            "value": true
+        },
+        "gitRepoType": {
+            "value": "FactoryVSTSConfiguration"
+        },
+        "gitAccountName": {
+            "value": "xxx"
+        },
+        "gitProjectName": {
+            "value": "xxx"
+        },
+        "gitRepositoryName": {
+            "value": "xxx"
+        },
+        "gitCollaborationBranch": {
+            "value": "main"
+        },
+        "gitRootFolder": {
+            "value": "/"
+        },
+        "diagnosticLogsRetentionInDays": {
+            "value": 1
+        },
+        "diagnosticStorageAccountId": {
+            "value": ""
+        }
+    }
+}

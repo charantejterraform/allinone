@@ -1,0 +1,27 @@
+parameters:
+  ServiceConnection: string
+  Environment: string
+  DependsOn: string
+
+stages:
+- stage: 'VerifyCodeDeprovision'
+  dependsOn: ${{ parameters.DependsOn }}
+  variables:
+  - template: ..\Variables\${{ parameters.Environment }}-Variables.yaml
+  condition: succeeded( '${{ parameters.DependsOn }}' )
+  displayName: 'Verify - Deprovision'
+  jobs:
+  - deployment: Deprovision
+    displayName: Deprovision Services
+    environment: ${{ parameters.Environment }}
+    strategy:
+      runOnce:
+       deploy:
+          steps:
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: 'Deprovision Resource Group and Services'
+            inputs:
+              azureResourceManagerConnection: "${{ parameters.ServiceConnection }}"
+              subscriptionId: "${{ variables.SubscriptionId }}"
+              action: DeleteRG
+              resourceGroupName: ${{ variables.ResourceGroupName }}

@@ -1,0 +1,41 @@
+---
+parameters:
+  - name: WorkspaceName
+    type: string
+  - name: ObjectIds
+    type: object
+  - name: azureSubscription
+    type: string
+
+steps:
+  - task: AzurePowerShell@5
+    displayName: 'Install Synapse Powershell Module'
+    inputs:
+      azureSubscription: "${{ parameters.azureSubscription }}"
+      ScriptType: InlineScript
+      Inline: |
+        $env:PSModulePath=$env:PSModulePath
+        Install-Module az.synapse -force
+        Import-Module az.synapse -force
+      errorActionPreference: Continue
+      azurePowerShellVersion: LatestVersion
+      
+  - ${{ each objectId in parameters.ObjectIds }}:
+    - task: AzurePowerShell@5
+      displayName: 'Assign Synapse pool administrator to ObjectId - ${{ objectId.id }}  '
+      inputs:
+        azureSubscription: "${{ parameters.azureSubscription }}"
+        ScriptType: InlineScript
+        Inline: |
+          $roleAssignment = Get-AzSynapseRoleAssignment -ObjectId ${{ objectId.id }} -WorkspaceName ${{ parameters.WorkspaceName}} -ErrorAction SilentlyContinue
+
+          #Check if incoming objectid already has synapse administrator role assignment
+          if($roleAssignment.RoleAssignmentId -eq '6e4bf58a-b8e1-4cc3-bbf9-d73143322b78')
+          {
+              write-host "ObjectID already has synapse administrator role"
+          }
+          else {
+              New-AzSynapseRoleAssignment -WorkspaceName ${{ parameters.WorkspaceName}}  -RoleDefinitionName "Synapse Administrator" -ObjectId ${{ objectId.id }} 
+          }
+        errorActionPreference: Continue
+        azurePowerShellVersion: LatestVersion

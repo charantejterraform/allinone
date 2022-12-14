@@ -1,0 +1,63 @@
+parameters:
+  ServiceConnection: string
+  Environment: string
+  
+stages:
+- stage: 'PrepareArtifacts'
+  displayName: 'Verify - Prepare Artifacts'
+  variables:
+  - template: ..\Variables\${{ parameters.Environment }}-Variables.yaml
+  jobs:
+  - deployment: Prepare_Artifacts
+    displayName: Prepare Artifacts
+    environment: ${{ parameters.Environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - task: CopyFiles@2
+            displayName: 'Stage ARM Templates'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryIP\ARMTemplates
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/ARMTemplates'
+
+          - task: CopyFiles@2
+            displayName: 'Stage Delivery Guidance Backlog Wiki pages'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryGuidance\Backlog
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/Backlog'
+
+          - task: CopyFiles@2
+            displayName: 'Stage YAML Pipelines'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryIP\Pipelines
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/Pipelines'
+
+          - task: CopyFiles@2
+            displayName: 'Stage PowerShell Scripts'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryIP\PowerShell
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/PowerShell'
+
+          - task: CopyFiles@2
+            displayName: 'Stage Backlog'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryIP\Backlog
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/Backlog'
+
+          - task: CopyFiles@2
+            displayName: 'Stage Resource Naming Calculator'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryGuidance\AzureResourceNamingCalculator
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/AzureResourceNamingCalculator'
+
+          - task: CopyFiles@2
+            displayName: 'Stage MetadataControl Db'
+            inputs:
+              SourceFolder: DataStrategy\DeliveryIP\MetadataControl
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/DataStrategy/DeliveryIP/MetadataControl'
+
+          - publish: $(Build.ArtifactStagingDirectory)
+            artifact: DSIP

@@ -1,0 +1,53 @@
+parameters:
+  ServiceConnection: string
+  SqlServerName: string
+  SqlProjName: string
+  SqlProjPath: string
+  BuildPlatform: string
+  BuildConfiguration: string
+  ServiceReleased: string
+  SqlAdminName: string
+  SqlAdminPassword: string
+  DacPacFilePath: string
+
+steps:
+
+  - task: NuGetToolInstaller@0
+    displayName: 'Use NuGet 4.4.1'
+    inputs:
+      versionSpec: 4.4.1
+
+  - task: NuGetCommand@2
+    displayName: 'NuGet restore'
+    inputs:
+      restoreSolution: ${{ parameters.SqlProjPath }}
+
+  - task: VSBuild@1
+    displayName: 'Build SQL Project'
+    inputs:
+      solution: ${{ parameters.SqlProjPath }}
+      platform: ${{ parameters.BuildPlatform }}
+      configuration: ${{ parameters.BuildConfiguration }}
+      clean: true      
+
+  - task: CopyFiles@2
+    displayName: 'Copy dacpac file to staging directory'
+    inputs:
+      SourceFolder: '$(System.DefaultWorkingDirectory)'
+      contents: '**/${{ parameters.SqlProjName }}.dacpac'
+      targetFolder: '$(Build.ArtifactStagingDirectory)/${{ parameters.SqlProjName }}'
+      cleanTargetFolder: true
+
+  - task: 'SqlAzureDacpacDeployment@1'
+    displayName: 'Deploy SQL Database'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      AuthenticationType: 'server'
+      ServerName: ${{ parameters.SqlServerName }}
+      DatabaseName: ${{ parameters.SqlProjName }}
+      SqlUsername: ${{ parameters.SqlAdminName }}
+      SqlPassword: ${{ parameters.SqlAdminPassword }}
+      deployType: 'DacpacTask'
+      DeploymentAction: 'Publish'
+      DacpacFile: '$(Build.ArtifactStagingDirectory)/${{ parameters.DacPacFilePath }}'
+      IpDetectionMethod: 'AutoDetect'

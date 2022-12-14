@@ -1,0 +1,6 @@
+variables:
+  serviceConnection: '<YourServiceConnectionName>'
+  DevEnvironment: 'Dev'
+  TestEnvironment: 'Test'
+
+  

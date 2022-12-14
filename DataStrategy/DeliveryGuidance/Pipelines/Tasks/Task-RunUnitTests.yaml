@@ -1,0 +1,19 @@
+parameters:
+  ServiceConnection: string
+  ServiceTestName: string
+
+steps:
+
+  - task: AzurePowerShell@5
+    displayName: '${{ parameters.ServiceTestName }} Unit Tests'
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      ScriptType: InlineScript
+      Inline: |
+        Install-Module -Name Pester -Force
+        
+        cd $(System.DefaultWorkingDirectory)\DataStrategy\DeliveryIP\ARMTemplates\${{ parameters.ServiceTestName }}\
+        
+        Invoke-Pester -OutputFile $(System.DefaultWorkingDirectory)\${{ parameters.ServiceTestName }}-Tests.xml -OutputFormat NUnitXml
+      azurePowerShellVersion: LatestVersion
+      pwsh: true

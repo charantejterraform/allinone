@@ -1,0 +1,33 @@
+{
+	"ADLS2Conf":{
+		"TenantId":"72f988bf-86f1-41af-91ab-2d7cd011db47",
+		"ResourceGroup":"MaSkaRG001",
+		"Name":"maskaadls2001",
+		"Location":"uksouth",
+		"DataLakeFolderStructure": {
+			"FileSystem":[{
+				"name": "my-source-system-data-1",
+				"directory": [{
+					"name": "party",
+					"temporalFolders": ["2020","12","03"]
+				},
+				{
+					"name": "asset",
+					"temporalFolders": ["2019","01","12"]
+				}]
+			},
+			{
+				"name": "my-source-system-data-2",
+				"directory": [{
+					"name": "agreement",
+					"temporalFolders": ["2020","12","03"]
+				},
+				{
+					"name": "quote",
+					"temporalFolders": ["2018","04","13"]
+				}
+				]
+			}]
+		}
+	}
+}

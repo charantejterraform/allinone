@@ -1,0 +1,32 @@
+parameters:
+  Environment: string
+  ArtifactFeedPath: string
+  
+stages:
+- stage: 'VerifyPublishPackage'
+  displayName: 'Verify - Publish Package'
+  dependsOn: 'VerifyCodeServices'
+  jobs:
+  - deployment: VerifyCodePublishPackage
+    displayName: VerifyCode-PublishPackage
+    environment: ${{ parameters.Environment }}
+    strategy:
+      runOnce:
+        preDeploy:
+          steps:
+            - download: current
+              artifact: DSIP
+        deploy:
+         steps:
+          # Publish a Universal Package
+          - task: UniversalPackages@0
+            displayName: 'Publish to Artifact Feed'
+            inputs:
+              command: publish
+              publishDirectory: '$(Agent.BuildDirectory)/DSIP/'
+              vstsFeedPublish: ${{ parameters.ArtifactFeedPath }}
+              vstsFeedPackagePublish: 'data-strategy-ip'
+              packagePublishDescription: 'Data strategy IP - ARM templates, Automation Pipelines, Wiki Pages, Backlog'
+              versionOption: minor
+
+         

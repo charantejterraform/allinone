@@ -1,0 +1,52 @@
+# Stage deployment variables
+variables:
+  serviceConnection: 'ES-Data Strategy-DEV-ServiceConnection'
+  SubscriptionId: 'c6824e16-9a58-4d53-ba3a-5960e0c066f2'
+  ResourceGroupName: 'DSIP-CodeVerification'
+  Location: 'westeurope'
+  KeyVaultSecretNameSql: 'AzureSqlDb-Password'
+  KeyVaultSecretNameSynapse: 'AzureSynapse-Password'
+  KeyVaultName: 'dsipakv01v'
+  SynapseAdministratorId: '99096349-4b3d-4cb0-87ac-282253b8c156' # objectid for dsip-administrators security group
+  SynapseWorkspaceName: 'dsipsynapsev'
+
+# Template paths
+  AzureKeyVaultTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureKeyVault/AzureKeyVault.json'
+  AzureKeyVaultTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureKeyVault/Parameters/Verify-AzureKeyVault.parameters.json'
+  
+  AzureStorageTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureStorage/AzureStorage.json'
+  AzureStorageTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureStorage/Parameters/Verify-AzureStorage.parameters.json'
+  AzureStorageHandshakeTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureStorage/Parameters/Verify-AzureStorage-Handshake.parameters.json'
+
+  AzureDataFactoryTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureDataFactory/AzureDataFactory.json'
+  AzureDataFactoryTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureDataFactory/Parameters/Verify-AzureDataFactory.parameters.json'
+  
+  AzureSqlDbTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureSqlDb/AzureSqlDb.json'
+  AzureSqlDbTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureSqlDb/Parameters/Verify-AzureSqlDb.parameters.json'
+  
+  AzurePurviewTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzurePurview/AzurePurview.json'
+  AzurePurviewTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzurePurview/Parameters/Verify-AzurePurview.parameters.json'
+  
+  AzureDataFactoryObjectsTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureDataFactoryObjects/AzureDataFactoryObjects.json'
+  AzureDataFactoryObjectsTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureDataFactoryObjects/Parameters/Verify-AzureDataFactoryObjects.Parameters.json'
+
+  AzureSynapseTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureSynapse/AzureSynapse.json'
+  AzureSynapseTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureSynapse/Parameters/Verify-AzureSynapse.parameters.json'
+ 
+  AzureEventGridTopicTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/EventGridTopic/EventGridTopic.json'
+  AzureEventGridTopicTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/EventGridTopic/Parameters/Verify-EventGridTopic.parameters.json'
+
+  AzureLogicAppTemplatePath: 'DataStrategy/DeliveryIP/ARMTemplates/AzureLogicApp/IngestionService.json'
+  AzureLogicAppTemplateParameterPath: 'DataStrategy/DeliveryGuidance/ARMTemplates/AzureLogicApp/Parameters/Verify-IngestionService.parameters.json'
+ 
+# SqlDb DacPac Variables
+  SqlServerName: dsipasqldb01v.database.windows.net
+  SqlProjName: MetadataControl
+  SqlProjPath: 'DataStrategy/DeliveryIP/MetadataControl/MetadataControl/MetadataControl.sqlproj'
+  BuildPlatform: 'any cpu'
+  BuildConfiguration: 'release'
+  SqlAdminName: SqlAdmin
+  DacPacFilePath: MetadataControl/DataStrategy/DeliveryIP/MetadataControl/MetadataControl/bin/Output/MetadataControl.dacpac
+
+# Purview Deployment Control.  1 yes, 0 no
+  DeployPurview: true

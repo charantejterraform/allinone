@@ -1,0 +1,1156 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name"
+        },
+        "LS_SQL_MetadataControl_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'LS_SQL_MetadataControl'"
+        },
+        "LS_Blob_DataIngestionStaging_properties_typeProperties_serviceEndpoint": {
+            "type": "string"
+        },
+        "LS_AKV_properties_typeProperties_baseUrl": {
+            "type": "string"
+        },
+        "LS_Rest_Example_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://ghoapi.azureedge.net/api/Indicator"
+        },
+        "LS_Adls_Example_properties_typeProperties_url": {
+            "type": "string"
+        },
+        "PL_EventGridTopicUri":{
+            "type": "string"
+        },
+        "TR_CustomEventTrigger_Example_properties_typeProperties_scope": {
+            "type": "string",
+            "defaultValue": "/subscriptions/c6824e16-9a58-4d53-ba3a-5960e0c066f2/resourceGroups/DSIP-CodeVerification/providers/Microsoft.EventGrid/topics/dsipeventgridtopicv"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]",
+        "eventGridTopicName": "[first(split(replace(parameters('PL_EventGridTopicUri'), 'https://', ''),'.'))]",
+        "eventGridResourceId": "[concat('/subscriptions/', subscription().subscriptionId ,'/resourceGroups/', resourceGroup().name ,'/providers/Microsoft.EventGrid/topics/', variables('eventGridTopicName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_AKV')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureKeyVault",
+                "typeProperties": {
+                    "baseUrl": "[parameters('LS_AKV_properties_typeProperties_baseUrl')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_Rest_Example')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "RestService",
+                "typeProperties": {
+                    "url": "[parameters('LS_Rest_Example_properties_typeProperties_url')]",
+                    "enableServerCertificateValidation": true,
+                    "authenticationType": "Anonymous"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_Adls_Example')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('LS_Adls_Example_properties_typeProperties_url')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_SQL_MetadataControl')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": "[parameters('LS_SQL_MetadataControl_connectionString')]",
+                    "password": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LS_AKV",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "AzureSqlDb-Password"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_AKV')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_Blob_DataIngestionStaging')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobStorage",
+                "typeProperties": {
+                    "serviceEndpoint": "[parameters('LS_Blob_DataIngestionStaging_properties_typeProperties_serviceEndpoint')]",
+                    "accountKind": "StorageV2"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TR_CustomEventTrigger_Example')]",
+            "type": "Microsoft.DataFactory/factories/triggers",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "Example trigger which triggers a pipeline based on a custom event from an event grid topic",
+                "annotations": [],
+                "runtimeState": "Started",
+                "pipelines": [
+                    {
+                        "pipelineReference": {
+                            "referenceName": "PL_Copy_AdlsCurated_Example",
+                            "type": "PipelineReference"
+                        },
+                        "parameters": {}
+                    }
+                ],
+                "type": "CustomEventsTrigger",
+                "typeProperties": {
+                    "subjectEndsWith": "",
+                    "subjectBeginsWith": "[concat(parameters('factoryName'),'-PL_Copy_AdlsRaw_Example-Completed')]",
+                    "scope": "[variables('eventGridResourceId')]",
+                    "events": [
+                        "PipelineCompleted"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/pipelines/PL_Copy_AdlsCurated_Example')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_Rest_Example')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_Rest_Example",
+                    "type": "LinkedServiceReference"
+                },
+                "folder": {
+                    "name": "Example"
+                },
+                "annotations": [],
+                "type": "RestResource",
+                "typeProperties": {},
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_Rest_Example')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_Json_Example')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_Adls_Example",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "fileSystemName": {
+                        "type": "string"
+                    },
+                    "folderName": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Example"
+                },
+                "annotations": [],
+                "type": "Json",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "folderPath": {
+                            "value": "@dataset().folderName",
+                            "type": "Expression"
+                        },
+                        "fileSystem": {
+                            "value": "@dataset().fileSystemName",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "schema": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_Adls_Example')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_IngestFromStaging_lp8_SourceDS')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_Blob_DataIngestionStaging",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "cw_fileName": {
+                        "type": "Object"
+                    },
+                    "cw_folderPath": {
+                        "type": "String"
+                    },
+                    "cw_container": {
+                        "type": "String"
+                    }
+                },
+                "folder": {
+                    "name": "PL_IngestFromStaging_lp8_20220206"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "fileName": {
+                            "value": "@dataset().cw_fileName",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().cw_folderPath",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@dataset().cw_container",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_Blob_DataIngestionStaging')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_IngestFromStaging_lp8_ControlDS')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_SQL_MetadataControl",
+                    "type": "LinkedServiceReference"
+                },
+                "folder": {
+                    "name": "PL_IngestFromStaging_lp8_20220206"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "ControlTable"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_SQL_MetadataControl')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_IngestFromStaging_lp8_DestinationDS')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_Adls_Example",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "cw_fileName": {
+                        "type": "Object"
+                    },
+                    "cw_folderPath": {
+                        "type": "String"
+                    },
+                    "cw_fileSystem": {
+                        "type": "String"
+                    }
+                },
+                "folder": {
+                    "name": "PL_IngestFromStaging_lp8_20220206"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": {
+                            "value": "@dataset().cw_fileName",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().cw_folderPath",
+                            "type": "Expression"
+                        },
+                        "fileSystem": {
+                            "value": "@dataset().cw_fileSystem",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_Adls_Example')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_Event_SendSignalComplete')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Set Signal Message",
+                        "description": "This is the completion message that will be published to the event grid topic.",
+                        "type": "SetVariable",
+                        "dependsOn": [],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "variableName": "signalMessage",
+                            "value": {
+                                "value": "@concat('[{\"subject\":\"', pipeline().DataFactory ,'-', pipeline().parameters.CallingPipelineName,'-Completed\",\"id\":\"', \n guid() ,'\" ,\"eventType\":\"PipelineCompleted\",\"eventTime\":\"', utcnow() ,'\",\"data\":{\"status\":\"complete\", \n\"dataFactory\":\"', pipeline().DataFactory ,'\"\n, \"pipelineName\":\"', pipeline().Pipeline  ,'\"\n, \"callingPipelineName\":\"', pipeline().parameters.CallingPipelineName,'\"\n},\"dataVersion\":\"\",\"metadataVersion\":\"1\"}]')",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    {
+                        "name": "Send Signal Complete Message",
+                        "type": "WebActivity",
+                        "dependsOn": [
+                            {
+                                "activity": "Set Signal Message",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "url": {
+                                "value": "@pipeline().parameters.EventGridTopicUrl",
+                                "type": "Expression"
+                            },
+                            "method": "POST",
+                            "headers": {},
+                            "body": {
+                                "value": "@json(variables('signalMessage'))",
+                                "type": "Expression"
+                            },
+                            "authentication": {
+                                "type": "MSI",
+                                "resource": "https://eventgrid.azure.net"
+                            }
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "parameters": {
+                    "EventGridTopicUrl": {
+                        "type": "string",
+                        "defaultValue": "[parameters('PL_EventGridTopicUri')]"
+                    },
+                    "CallingPipelineName": {
+                        "type": "string"
+                    }
+                },
+                "variables": {
+                    "signalMessage": {
+                        "type": "String"
+                    }
+                },
+                "folder": {
+                    "name": "Common"
+                },
+                "annotations": [],
+                "lastPublishTime": "2022-02-06T12:06:09Z"
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_Copy_AdlsCurated_Example')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "Example pipeline which copies data to data lake that creates a folder structure, and also sends a completion signal to the event grid topic.",
+                "activities": [
+                    {
+                        "name": "Example copy to data lake curated zone",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "JsonSource",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSReadSettings",
+                                    "recursive": true,
+                                    "wildcardFolderPath": {
+                                        "value": "@concat('DataSourceName/EntityName/', formatDateTime(utcnow(), 'yyyy/MM/dd'))",
+                                        "type": "Expression"
+                                    },
+                                    "wildcardFileName": "*.json",
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "JsonReadSettings"
+                                }
+                            },
+                            "sink": {
+                                "type": "JsonSink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                },
+                                "formatSettings": {
+                                    "type": "JsonWriteSettings"
+                                }
+                            },
+                            "enableStaging": false,
+                            "validateDataConsistency": true
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DS_Json_Example",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "fileSystemName": "raw",
+                                    "folderName": {
+                                        "value": "@concat('DataSourceName/EntityName/', formatDateTime(utcnow(), 'yyyy/MM/dd'))",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "DS_Json_Example",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "fileSystemName": "curated",
+                                    "folderName": {
+                                        "value": "@concat('DataSourceName/EntityName/', formatDateTime(utcnow(), 'yyyy/MM/dd'))",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Send signal complete",
+                        "type": "ExecutePipeline",
+                        "dependsOn": [
+                            {
+                                "activity": "Example copy to data lake curated zone",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "pipeline": {
+                                "referenceName": "PL_Event_SendSignalComplete",
+                                "type": "PipelineReference"
+                            },
+                            "waitOnCompletion": true,
+                            "parameters": {
+                                "CallingPipelineName": {
+                                    "value": "@pipeline().Pipeline",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "folder": {
+                    "name": "Example"
+                },
+                "annotations": [],
+                "lastPublishTime": "2022-02-06T12:06:10Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_Json_Example')]",
+                "[concat(variables('factoryId'), '/pipelines/PL_Event_SendSignalComplete')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_Copy_AdlsRaw_Example')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "Example pipeline which copies data to data lake that creates a folder structure, and also sends a completion signal to the event grid topic.",
+                "activities": [
+                    {
+                        "name": "Example copy to data lake raw zone",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "RestSource",
+                                "httpRequestTimeout": "00:01:40",
+                                "requestInterval": "00.00:00:00.010",
+                                "requestMethod": "GET",
+                                "paginationRules": {
+                                    "supportRFC5988": "true"
+                                }
+                            },
+                            "sink": {
+                                "type": "JsonSink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                },
+                                "formatSettings": {
+                                    "type": "JsonWriteSettings"
+                                }
+                            },
+                            "enableStaging": false,
+                            "validateDataConsistency": true
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DS_Rest_Example",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "DS_Json_Example",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "fileSystemName": "raw",
+                                    "folderName": {
+                                        "value": "@concat('DataSourceName/EntityName/', formatDateTime(utcnow(), 'yyyy/MM/dd'))",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Send signal complete",
+                        "type": "ExecutePipeline",
+                        "dependsOn": [
+                            {
+                                "activity": "Example copy to data lake raw zone",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "pipeline": {
+                                "referenceName": "PL_Event_SendSignalComplete",
+                                "type": "PipelineReference"
+                            },
+                            "waitOnCompletion": true,
+                            "parameters": {
+                                "CallingPipelineName": {
+                                    "value": "@pipeline().Pipeline",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "folder": {
+                    "name": "Example"
+                },
+                "annotations": [],
+                "lastPublishTime": "2022-02-06T12:06:10Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_Rest_Example')]",
+                "[concat(variables('factoryId'), '/datasets/DS_Json_Example')]",
+                "[concat(variables('factoryId'), '/pipelines/PL_Event_SendSignalComplete')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_IngestFromStaging_lp8_BottomLevel')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This pipeline will copy objects from one group. The objects belonging to this group will be copied parallelly.",
+                "activities": [
+                    {
+                        "name": "ListObjectsFromOneGroup",
+                        "description": "List objects from one group and iterate each of them to downstream activities",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@pipeline().parameters.ObjectsPerGroupToCopy",
+                                "type": "Expression"
+                            },
+                            "activities": [
+                                {
+                                    "name": "RouteJobsBasedOnLoadingBehavior",
+                                    "description": "Check the loading behavior for each object if it requires full load or incremental load. If it is Default or FullLoad case, do full load. If it is DeltaLoad case, do incremental load via watermark column to identify changes.",
+                                    "type": "Switch",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "on": {
+                                            "value": "@json(item().DataLoadingBehaviorSettings).dataLoadingBehavior",
+                                            "type": "Expression"
+                                        },
+                                        "cases": [
+                                            {
+                                                "value": "FullLoad",
+                                                "activities": [
+                                                    {
+                                                        "name": "FullLoadOneObject",
+                                                        "description": "Take a full snapshot on this object and copy it to the destination",
+                                                        "type": "Copy",
+                                                        "dependsOn": [],
+                                                        "policy": {
+                                                            "timeout": "7.00:00:00",
+                                                            "retry": 0,
+                                                            "retryIntervalInSeconds": 30,
+                                                            "secureOutput": false,
+                                                            "secureInput": false
+                                                        },
+                                                        "userProperties": [
+                                                            {
+                                                                "name": "Source",
+                                                                "value": "@{json(item().SourceObjectSettings).container}/@{json(item().SourceObjectSettings).folderPath}/@{json(item().SourceObjectSettings).fileName}"
+                                                            },
+                                                            {
+                                                                "name": "Destination",
+                                                                "value": "@{json(item().SinkObjectSettings).fileSystem}/@{json(item().SinkObjectSettings).folderPath}/@{json(item().SinkObjectSettings).fileName}"
+                                                            }
+                                                        ],
+                                                        "typeProperties": {
+                                                            "source": {
+                                                                "type": "BinarySource",
+                                                                "storeSettings": {
+                                                                    "type": "AzureBlobStorageReadSettings",
+                                                                    "recursive": {
+                                                                        "value": "@json(item().CopySourceSettings).recursive",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "wildcardFileName": {
+                                                                        "value": "@json(item().CopySourceSettings).wildcardFileName",
+                                                                        "type": "Expression"
+                                                                    }
+                                                                },
+                                                                "formatSettings": {
+                                                                    "type": "BinaryReadSettings"
+                                                                }
+                                                            },
+                                                            "sink": {
+                                                                "type": "BinarySink",
+                                                                "storeSettings": {
+                                                                    "type": "AzureBlobFSWriteSettings"
+                                                                }
+                                                            },
+                                                            "enableStaging": false,
+                                                            "enableSkipIncompatibleRow": {
+                                                                "value": "@json(item().CopyActivitySettings).enableSkipIncompatibleRow",
+                                                                "type": "Expression"
+                                                            },
+                                                            "skipErrorFile": {
+                                                                "dataInconsistency": false,
+                                                                "type": "Expression",
+                                                                "value": "@json(item().CopyActivitySettings).skipErrorFile"
+                                                            },
+                                                            "validateDataConsistency": true
+                                                        },
+                                                        "inputs": [
+                                                            {
+                                                                "referenceName": "PL_IngestFromStaging_lp8_SourceDS",
+                                                                "type": "DatasetReference",
+                                                                "parameters": {
+                                                                    "cw_fileName": {
+                                                                        "value": "@json(item().SourceObjectSettings).fileName",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "cw_folderPath": {
+                                                                        "value": "@json(item().SourceObjectSettings).folderPath",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "cw_container": {
+                                                                        "value": "@json(item().SourceObjectSettings).container",
+                                                                        "type": "Expression"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ],
+                                                        "outputs": [
+                                                            {
+                                                                "referenceName": "PL_IngestFromStaging_lp8_DestinationDS",
+                                                                "type": "DatasetReference",
+                                                                "parameters": {
+                                                                    "cw_fileName": {
+                                                                        "value": "@json(item().SinkObjectSettings).fileName",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "cw_folderPath": {
+                                                                        "value": "@json(item().SinkObjectSettings).folderPath",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "cw_fileSystem": {
+                                                                        "value": "@json(item().SinkObjectSettings).fileSystem",
+                                                                        "type": "Expression"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "defaultActivities": [
+                                            {
+                                                "name": "DefaultFullLoadOneObject",
+                                                "description": "Take a full snapshot on this object and copy it to the destination",
+                                                "type": "Copy",
+                                                "dependsOn": [],
+                                                "policy": {
+                                                    "timeout": "7.00:00:00",
+                                                    "retry": 0,
+                                                    "retryIntervalInSeconds": 30,
+                                                    "secureOutput": false,
+                                                    "secureInput": false
+                                                },
+                                                "userProperties": [
+                                                    {
+                                                        "name": "Source",
+                                                        "value": "@{json(item().SourceObjectSettings).container}/@{json(item().SourceObjectSettings).folderPath}/@{json(item().SourceObjectSettings).fileName}"
+                                                    },
+                                                    {
+                                                        "name": "Destination",
+                                                        "value": "@{json(item().SinkObjectSettings).fileSystem}/@{json(item().SinkObjectSettings).folderPath}/@{json(item().SinkObjectSettings).fileName}"
+                                                    }
+                                                ],
+                                                "typeProperties": {
+                                                    "source": {
+                                                        "type": "BinarySource",
+                                                        "storeSettings": {
+                                                            "type": "AzureBlobStorageReadSettings",
+                                                            "recursive": {
+                                                                "value": "@json(item().CopySourceSettings).recursive",
+                                                                "type": "Expression"
+                                                            },
+                                                            "wildcardFileName": {
+                                                                "value": "@json(item().CopySourceSettings).wildcardFileName",
+                                                                "type": "Expression"
+                                                            }
+                                                        },
+                                                        "formatSettings": {
+                                                            "type": "BinaryReadSettings"
+                                                        }
+                                                    },
+                                                    "sink": {
+                                                        "type": "BinarySink",
+                                                        "storeSettings": {
+                                                            "type": "AzureBlobFSWriteSettings"
+                                                        }
+                                                    },
+                                                    "enableStaging": false,
+                                                    "enableSkipIncompatibleRow": {
+                                                        "value": "@json(item().CopyActivitySettings).enableSkipIncompatibleRow",
+                                                        "type": "Expression"
+                                                    },
+                                                    "skipErrorFile": {
+                                                        "dataInconsistency": false,
+                                                        "type": "Expression",
+                                                        "value": "@json(item().CopyActivitySettings).skipErrorFile"
+                                                    },
+                                                    "validateDataConsistency": true
+                                                },
+                                                "inputs": [
+                                                    {
+                                                        "referenceName": "PL_IngestFromStaging_lp8_SourceDS",
+                                                        "type": "DatasetReference",
+                                                        "parameters": {
+                                                            "cw_fileName": {
+                                                                "value": "@json(item().SourceObjectSettings).fileName",
+                                                                "type": "Expression"
+                                                            },
+                                                            "cw_folderPath": {
+                                                                "value": "@json(item().SourceObjectSettings).folderPath",
+                                                                "type": "Expression"
+                                                            },
+                                                            "cw_container": {
+                                                                "value": "@json(item().SourceObjectSettings).container",
+                                                                "type": "Expression"
+                                                            }
+                                                        }
+                                                    }
+                                                ],
+                                                "outputs": [
+                                                    {
+                                                        "referenceName": "PL_IngestFromStaging_lp8_DestinationDS",
+                                                        "type": "DatasetReference",
+                                                        "parameters": {
+                                                            "cw_fileName": {
+                                                                "value": "@json(item().SinkObjectSettings).fileName",
+                                                                "type": "Expression"
+                                                            },
+                                                            "cw_folderPath": {
+                                                                "value": "@json(item().SinkObjectSettings).folderPath",
+                                                                "type": "Expression"
+                                                            },
+                                                            "cw_fileSystem": {
+                                                                "value": "@json(item().SinkObjectSettings).fileSystem",
+                                                                "type": "Expression"
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "parameters": {
+                    "ObjectsPerGroupToCopy": {
+                        "type": "Array"
+                    }
+                },
+                "folder": {
+                    "name": "PL_IngestFromStaging_lp8_20220206"
+                },
+                "annotations": [],
+                "lastPublishTime": "2022-02-06T12:36:40Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/PL_IngestFromStaging_lp8_SourceDS')]",
+                "[concat(variables('factoryId'), '/datasets/PL_IngestFromStaging_lp8_DestinationDS')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_IngestFromStaging_lp8_MiddleLevel')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This pipeline will copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
+                "activities": [
+                    {
+                        "name": "DivideOneBatchIntoMultipleGroups",
+                        "description": "Divide objects from single batch into multiple sub parallel groups to avoid reaching the output limit of lookup activity.",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@range(0, add(div(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                    if(equals(mod(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), 0), 0, 1)))",
+                                "type": "Expression"
+                            },
+                            "isSequential": false,
+                            "batchCount": 50,
+                            "activities": [
+                                {
+                                    "name": "GetObjectsPerGroupToCopy",
+                                    "description": "Get objects (tables etc.) from control table required to be copied in this group. The order of objects to be copied following the TaskId in control table (ORDER BY [TaskId] DESC).",
+                                    "type": "Lookup",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "AzureSqlSource",
+                                            "sqlReaderQuery": {
+                                                "value": "WITH OrderedControlTable AS (\n                             SELECT *, ROW_NUMBER() OVER (ORDER BY [TaskId], [Id] DESC) AS RowNumber\n                             FROM @{pipeline().parameters.MainControlTableName}\n                             where TopLevelPipelineName = '@{pipeline().parameters.TopLevelPipelineName}'\n                             and TriggerName like '%@{pipeline().parameters.TriggerName}%' and CopyEnabled = 1)\n                             SELECT * FROM OrderedControlTable WHERE RowNumber BETWEEN @{add(mul(int(item()),pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                             add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch), 1))}\n                             AND @{min(add(mul(int(item()), pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch),\n                             pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity)),\n                            mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, add(pipeline().parameters.CurrentSequentialNumberOfBatch,1)), pipeline().parameters.SumOfObjectsToCopy)}",
+                                                "type": "Expression"
+                                            },
+                                            "partitionOption": "None"
+                                        },
+                                        "dataset": {
+                                            "referenceName": "PL_IngestFromStaging_lp8_ControlDS",
+                                            "type": "DatasetReference",
+                                            "parameters": {}
+                                        },
+                                        "firstRowOnly": false
+                                    }
+                                },
+                                {
+                                    "name": "CopyObjectsInOneGroup",
+                                    "description": "Execute another pipeline to copy objects from one group. The objects belonging to this group will be copied parallelly.",
+                                    "type": "ExecutePipeline",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "GetObjectsPerGroupToCopy",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "pipeline": {
+                                            "referenceName": "PL_IngestFromStaging_lp8_BottomLevel",
+                                            "type": "PipelineReference"
+                                        },
+                                        "waitOnCompletion": true,
+                                        "parameters": {
+                                            "ObjectsPerGroupToCopy": {
+                                                "value": "@activity('GetObjectsPerGroupToCopy').output.value",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "parameters": {
+                    "MaxNumberOfObjectsReturnedFromLookupActivity": {
+                        "type": "Int"
+                    },
+                    "TopLevelPipelineName": {
+                        "type": "String"
+                    },
+                    "TriggerName": {
+                        "type": "String"
+                    },
+                    "CurrentSequentialNumberOfBatch": {
+                        "type": "Int"
+                    },
+                    "SumOfObjectsToCopy": {
+                        "type": "Int"
+                    },
+                    "SumOfObjectsToCopyForCurrentBatch": {
+                        "type": "Int"
+                    },
+                    "MainControlTableName": {
+                        "type": "String"
+                    }
+                },
+                "folder": {
+                    "name": "PL_IngestFromStaging_lp8_20220206"
+                },
+                "annotations": [],
+                "lastPublishTime": "2022-02-06T12:36:41Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/PL_IngestFromStaging_lp8_ControlDS')]",
+                "[concat(variables('factoryId'), '/pipelines/PL_IngestFromStaging_lp8_BottomLevel')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_IngestFromStaging_lp8_TopLevel')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This pipeline will count the total number of objects (tables etc.) required to be copied in this run, come up with the number of sequential batches based on the max allowed concurrent copy task, and then execute another pipeline to copy different batches sequentially.",
+                "activities": [
+                    {
+                        "name": "GetSumOfObjectsToCopy",
+                        "description": "Count the total number of objects (tables etc.) required to be copied in this run.",
+                        "type": "Lookup",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "AzureSqlSource",
+                                "sqlReaderQuery": {
+                                    "value": "SELECT count(*) as count FROM @{pipeline().parameters.MainControlTableName} where TopLevelPipelineName='@{pipeline().Pipeline}' and CopyEnabled = 1 and SourceObjectSettings like '%@{pipeline().parameters.DataSourceName}%'",
+                                    "type": "Expression"
+                                },
+                                "partitionOption": "None"
+                            },
+                            "dataset": {
+                                "referenceName": "PL_IngestFromStaging_lp8_ControlDS",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        }
+                    },
+                    {
+                        "name": "CopyBatchesOfObjectsSequentially",
+                        "description": "Come up with the number of sequential batches based on the max allowed concurrent copy tasks, and then execute another pipeline to copy different batches sequentially.",
+                        "type": "ForEach",
+                        "dependsOn": [
+                            {
+                                "activity": "GetSumOfObjectsToCopy",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@range(0, add(div(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks),\n                    if(equals(mod(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks), 0), 0, 1)))",
+                                "type": "Expression"
+                            },
+                            "isSequential": true,
+                            "activities": [
+                                {
+                                    "name": "CopyObjectsInOneBatch",
+                                    "description": "Execute another pipeline to copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
+                                    "type": "ExecutePipeline",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "pipeline": {
+                                            "referenceName": "PL_IngestFromStaging_lp8_MiddleLevel",
+                                            "type": "PipelineReference"
+                                        },
+                                        "waitOnCompletion": true,
+                                        "parameters": {
+                                            "MaxNumberOfObjectsReturnedFromLookupActivity": {
+                                                "value": "@pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity",
+                                                "type": "Expression"
+                                            },
+                                            "TopLevelPipelineName": {
+                                                "value": "@{pipeline().Pipeline}",
+                                                "type": "Expression"
+                                            },
+                                            "TriggerName": {
+                                                "value": "@{pipeline().TriggerName}",
+                                                "type": "Expression"
+                                            },
+                                            "CurrentSequentialNumberOfBatch": {
+                                                "value": "@item()",
+                                                "type": "Expression"
+                                            },
+                                            "SumOfObjectsToCopy": {
+                                                "value": "@activity('GetSumOfObjectsToCopy').output.firstRow.count",
+                                                "type": "Expression"
+                                            },
+                                            "SumOfObjectsToCopyForCurrentBatch": {
+                                                "value": "@min(pipeline().parameters.MaxNumberOfConcurrentTasks, activity('GetSumOfObjectsToCopy').output.firstRow.count)",
+                                                "type": "Expression"
+                                            },
+                                            "MainControlTableName": {
+                                                "value": "@pipeline().parameters.MainControlTableName",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "parameters": {
+                    "MaxNumberOfObjectsReturnedFromLookupActivity": {
+                        "type": "Int",
+                        "defaultValue": 5000
+                    },
+                    "MaxNumberOfConcurrentTasks": {
+                        "type": "Int",
+                        "defaultValue": 20
+                    },
+                    "MainControlTableName": {
+                        "type": "String",
+                        "defaultValue": "dbo.ControlTable"
+                    },
+                    "DataSourceName": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "PL_IngestFromStaging_lp8_20220206"
+                },
+                "annotations": [
+                    "MetadataDrivenSolution"
+                ],
+                "lastPublishTime": "2022-02-06T12:36:42Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/PL_IngestFromStaging_lp8_ControlDS')]",
+                "[concat(variables('factoryId'), '/pipelines/PL_IngestFromStaging_lp8_MiddleLevel')]"
+            ]
+        }
+    ]
+}

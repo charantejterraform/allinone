@@ -1,0 +1,66 @@
+parameters:
+  ServiceConnection: string
+  Environment: string
+  DependsOn: string
+  FeatureFlag_DeployHandShakeService: boolean
+  
+stages:
+- stage: '${{ parameters.Environment }}Services'
+  displayName: '${{ parameters.Environment }} Services Release'
+  variables:
+  - template: ..\Variables\${{ parameters.Environment }}-Variables.yaml
+  dependsOn: ${{ parameters.DependsOn }}
+  jobs:
+  - deployment: Release_Services
+    displayName: Release Services
+    environment: ${{ parameters.Environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          # Get Sql Admin Password into a variable
+          - template: ..\Tasks\Task-GetKeyVaultSecret.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              KeyVaultName: ${{ variables.KeyVaultName }}
+              SecretName: ${{ variables.KeyVaultSecretNameSql }}
+              ServiceReleased: "Metadata Control Database"
+
+          # Deploy Sql Database   
+          - template: ..\Tasks\Task-SqlDbDacPacDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              SqlServerName: ${{ variables.SqlServerName }}
+              SqlProjName: ${{ variables.SqlProjName }}
+              SqlProjPath: ${{ variables.SqlProjPath }}
+              BuildPlatform: ${{ variables.BuildPlatform }}
+              BuildConfiguration: ${{ variables.BuildConfiguration }}
+              ServiceReleased: "Metadata Control Db"
+              SqlAdminName: ${{ variables.SqlAdminName }}
+              SqlAdminPassword: $(AzureSqlDb-Password)
+              DacPacFilePath: ${{ variables.DacPacFilePath }}
+
+          # Deploy Azure Data Factory Objects
+          - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.ServiceConnection }}
+              SubscriptionId: ${{ variables.SubscriptionId }}
+              ResourceGroupName: ${{ variables.ResourceGroupName }}
+              Location: ${{ variables.Location }}
+              TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureDataFactoryObjectsTemplatePath }}"
+              TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureDataFactoryObjectsTemplateParameterPath }}"
+              ServiceReleased: "Azure Data Factory Objects"
+
+          # Deploy Logic App for Handshake Service
+          - ${{ if eq(parameters.FeatureFlag_DeployHandShakeService, true) }}:
+            - template: ..\Tasks\Task-ArmTemplateDeployment.yaml
+              parameters:
+                ServiceConnection: ${{ parameters.ServiceConnection }}
+                SubscriptionId: ${{ Variables.SubscriptionId }}
+                ResourceGroupName: ${{ variables.ResourceGroupName }}
+                Location: ${{ Variables.Location }}
+                TemplateFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureLogicAppTemplatePath }}"
+                TemplateParamFilePath: "$(System.DefaultWorkingDirectory)/${{ variables.AzureLogicAppTemplateParameterPath }}"
+                ServiceReleased: "Azure Logic App - Handshake"

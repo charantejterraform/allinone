@@ -1,0 +1,57 @@
+parameters:
+  - name: FeatureFlag_DeployHandShakeService
+    type: boolean
+    default: false
+
+name: Pipeline-$(Build.DefinitionName)-$(Date:yyyyMMdd)$(Rev:.r)
+
+pr: none
+
+trigger: none
+  
+variables:
+- template: Variables\Global-Variables.yaml
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+
+# UNIT TEST STAGE - Run Unit Tests
+- template: Stages\Stage-UnitTests.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    Environment: ${{ variables.VerificationEnvironment }}
+
+# PREPARATION STAGE - Prepare Artifacts
+- template: Stages\Stage-PrepareArtifacts.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    Environment: ${{ variables.VerificationEnvironment }}
+
+# INFRA DEPLOY STAGE - Deploy infrastructure
+- template: Stages\Stage-Infrastructure.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    Environment: ${{ variables.VerificationEnvironment }}
+    FeatureFlag_DeployHandShakeService: ${{ parameters.FeatureFlag_DeployHandShakeService }}
+
+# SERVICES DEPLOY STAGE - Deploy services
+- template: Stages\Stage-Services.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    DependsOn: 'VerifyCodeInfrastructure'
+    Environment: ${{ variables.VerificationEnvironment }}
+
+# PUBLISH PACKAGE STAGE - Publish Package
+- template: Stages\Stage-PublishDsipArtifact.yaml
+  parameters:
+    Environment: ${{ variables.VerificationEnvironment }}
+    ArtifactFeedPath: ${{ variables.ArtifactFeedPath }}
+
+# DEPROVISION STAGE - De-provision Data Strategy resource group
+- template: Stages\Stage-Deprovision.yaml
+  parameters:
+    ServiceConnection: ${{ variables.serviceConnection }}
+    DependsOn: 'VerifyPublishPackage'
+    Environment: ${{ variables.VerificationEnvironment }}

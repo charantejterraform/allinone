@@ -1,0 +1,50 @@
+# Stage deployment variables
+variables:
+  serviceConnection: '<YourServiceConnectionName>'
+  SubscriptionId: '<YourSubscriptionId>'
+  ResourceGroupName: '<YourResourceGroupName>'
+  Location: '<YourResourceLocation>'
+  KeyVaultSecretNameSql: 'AzureSqlDb-Password'
+  KeyVaultSecretNameSynapse: 'AzureSynapse-Password'
+  KeyVaultName: '<YourKeyVaultName>'
+
+# Template paths
+  AzureKeyVaultTemplatePath: 'DataStrategy/ARMTemplates/AzureKeyVault/AzureKeyVault.json'
+  AzureKeyVaultTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureKeyVault/Parameters/Test-AzureKeyVault.parameters.json'
+  
+  AzureStorageTemplatePath: 'DataStrategy/ARMTemplates/AzureStorage/AzureStorage.json'
+  AzureStorageTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureStorage/Parameters/Test-AzureStorage.parameters.json'
+  AzureStorageHandshakeTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureStorage/Parameters/Test-AzureStorage-Handshake.parameters.json'
+  
+  AzureDataFactoryTemplatePath: 'DataStrategy/ARMTemplates/AzureDataFactory/AzureDataFactory.json'
+  AzureDataFactoryTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureDataFactory/Parameters/Test-AzureDataFactory.parameters.json'
+  
+  AzureSqlDbTemplatePath: 'DataStrategy/ARMTemplates/AzureSqlDb/AzureSqlDb.json'
+  AzureSqlDbTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureSqlDb/Parameters/Test-AzureSqlDb.parameters.json'
+  
+  AzurePurviewTemplatePath: 'DataStrategy/ARMTemplates/AzurePurview/AzurePurview.json'
+  AzurePurviewTemplateParameterPath: 'DataStrategy/ARMTemplates/AzurePurview/Parameters/Test-AzurePurview.parameters.json'
+  
+  AzureDataFactoryObjects: 'DataStrategy/ARMTemplates/AzureDataFactoryObjects/AzureDataFactoryObjects.json'
+  AzureDataFactoryObjectsTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureDataFactoryObjects/Parameters/Test-AzureDataFactoryObjects.Parameters.json'
+
+  AzureSynapseTemplatePath: 'DataStrategy/ARMTemplates/AzureSynapse/AzureSynapse.json'
+  AzureSynapseTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureSynapse/Parameters/Test-AzureSynapse.parameters.json'
+
+  AzureEventGridTopicTemplatePath: 'DataStrategy/ARMTemplates/EventGridTopic/EventGridTopic.json'
+  AzureEventGridTopicTemplateParameterPath: 'DataStrategy/ARMTemplates/EventGridTopic/Parameters/Test-EventGridTopic.parameters.json'
+
+  AzureLogicAppTemplatePath: 'DataStrategy/ARMTemplates/AzureLogicApp/IngestionService.json'
+  AzureLogicAppTemplateParameterPath: 'DataStrategy/ARMTemplates/AzureLogicApp/Parameters/Dev-IngestionService.parameters.json'
+ 
+ # SqlDb DacPac Variables
+  SqlServerName: <YourSQLServerName>.database.windows.net
+  SqlProjName: MetadataControl
+  SqlProjPath: 'DataStrategy/MetadataControl/MetadataControl/MetadataControl.sqlproj'
+  BuildPlatform: 'any cpu'
+  BuildConfiguration: 'release'
+  SqlAdminName: SqlAdmin
+  DacPacFilePath: MetadataControl/DataStrategy/MetadataControl/MetadataControl/bin/Output/MetadataControl.dacpac
+
+# Purview Deployment Control.  1 yes, 0 no
+  DeployPurview: false

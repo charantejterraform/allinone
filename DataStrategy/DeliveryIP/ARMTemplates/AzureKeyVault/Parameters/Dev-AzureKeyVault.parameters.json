@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Location": {
+      "value": "uksouth"
+    },
+    "enablePrivateEndpoint": {
+      "value": false
+    },
+    "enablePrivateEndpointDNSZone": {
+      "value": false
+    },
+    "VnetName": {
+      "value": ""
+    },
+    "vNetResourceGroup": {
+      "value": ""
+    },
+    "subnetName": {
+      "value": ""
+    },
+    "KeyVaultName": {
+      "value": "<your dev environment key vault name>"
+    },
+    "DevOpsObjectId": {
+      "value": "<devops object id>"
+    },
+    "enabledForDeployment": {
+      "value": true
+    },
+    "enabledForDiskEncryption": {
+      "value": true
+    },
+    "enabledForTemplateDeployment": {
+      "value": true
+    },
+    "enableSoftDelete": {
+      "value": true
+    },
+    "softDeleteRetentionInDays": {
+      "value": 90
+    },
+    "enableRbacAuthorization": {
+      "value": false
+    },
+    "SkuName": {
+      "value": "Standard"
+    },
+    "keyVaultPrivateDnsZoneName": {
+      "value": "privatelink.vaultcore.azure.net"
+    },
+    "keyVaultPrivateDnsZoneSubscriptionId": {
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    "keyVaultPrivateDnsZoneResourceGroup": {
+      "value": "keyVaultPrivateDnsZoneResourceGroup"
+    }
+  }
+}

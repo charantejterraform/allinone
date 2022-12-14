@@ -1,0 +1,68 @@
+parameters:
+  ServiceConnection: string
+  Environment: string
+  
+stages:
+- stage: 'UnitTests'
+  displayName: 'Verify - Unit Tests'
+  variables:
+  - template: ..\Variables\${{ parameters.Environment }}-Variables.yaml
+  jobs:
+  - deployment: Unit_Tests
+    displayName: Unit Tests
+    environment: ${{ parameters.Environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          # AzureDatabricks unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: AzureDatabricks
+
+          # AzureDataFactory unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: AzureDataFactory
+
+          # AzureKeyVault unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: AzureKeyVault
+
+          # AzurePurview unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: AzurePurview
+
+          # AzureStorage unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: AzureStorage
+
+          # AzureSynapse unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: AzureSynapse
+
+          # EventGridTopic unit tests
+          - template: ..\Tasks\Task-RunUnitTests.yaml
+            parameters:
+              ServiceConnection: ${{ parameters.serviceConnection }}
+              ServiceTestName: EventGridTopic
+
+          # Publish Tests
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results $(System.DefaultWorkingDirectory)\*.xml'
+            inputs:
+              testResultsFormat: NUnit
+              testResultsFiles: '$(System.DefaultWorkingDirectory)\*.xml'
+              failTaskOnFailedTests: true
